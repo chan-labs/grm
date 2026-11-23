@@ -22,7 +22,9 @@ use tempfile::TempDir;
 
 /// An isolated sandbox for one test. Dropping it deletes everything.
 pub struct Fixture {
-    // RUST: kept only so the directory lives as long as the fixture.
+    // RUST: kept only so the directory lives as long as the fixture. `TempDir`
+    // implements `Drop` (Rust's destructor): when the fixture goes out of
+    // scope at the end of a test, the whole temp directory is deleted.
     _dir: TempDir,
     /// The temp directory itself.
     pub base: PathBuf,

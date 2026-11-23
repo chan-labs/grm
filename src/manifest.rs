@@ -23,11 +23,6 @@
 //!       email: jane@work.example
 //! ```
 
-// RUST: `#![...]` (with `!`) is an "inner attribute" applying to this whole
-// file. The commands that call this module are still stubs, so silence
-// "never used" warnings until they're implemented.
-// TODO: remove once the commands use this module.
-
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -65,6 +60,9 @@ pub struct Defaults {
     #[serde(default)]
     pub protocol: Protocol,
     /// Base identity applied to every repo.
+    // RUST: `skip_serializing_if = "Option::is_none"` leaves the key out of
+    // the YAML entirely when it is `None` (instead of writing `identity: null`)
+    // so files written by `grm add` / `grm init` stay short.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub identity: Option<Identity>,
 }
@@ -257,6 +255,9 @@ pub fn expand_tilde(path: &str) -> Result<PathBuf> {
     Ok(PathBuf::from(path))
 }
 
+// RUST: an `impl Type { ... }` block defines methods on a struct. A method
+// whose first parameter is `&self` borrows the value it is called on
+// (`manifest.root_dir()`), so the caller keeps ownership of it.
 impl Manifest {
     /// `root` with `~` expanded. Errors if the result is not absolute.
     pub fn root_dir(&self) -> Result<PathBuf> {

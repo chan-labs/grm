@@ -7,7 +7,10 @@
 //! (usually just "mentions the repo name") since the output format isn't
 //! fixed.
 
-// RUST: `mod common;` pulls in `tests/common/mod.rs` as a module.
+// RUST: files directly in `tests/` are *integration tests*: each is compiled
+// as a separate crate that can only use the crate's public interface, which
+// for a binary like grm means running the built `grm` executable.
+// `mod common;` pulls in `tests/common/mod.rs` as a module.
 mod common;
 
 use std::fs;

@@ -3,6 +3,9 @@
 //! Every subcommand module exposes
 //! `pub fn run(args: <XArgs>, ctx: &Context) -> anyhow::Result<ExitCode>`.
 
+// RUST: `pub mod add;` loads `src/commands/add.rs` as the child module
+// `commands::add` and makes it visible to the rest of the crate (`main.rs`
+// calls `commands::add::run`).
 pub mod add;
 pub mod import;
 pub mod init;
