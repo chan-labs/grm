@@ -71,6 +71,9 @@ fn print_plan(report: &Report, p: &Painter) {
                 r.repo.path.display()
             ),
             RepoState::Ok => println!("{} {name}  up to date", p.ok("✓")),
+            RepoState::Error(msg) => {
+                println!("{} {name}  would skip (can't inspect): {msg}", p.err("✗"))
+            }
             RepoState::Drifted(drifts) => {
                 if r.needs_sync() {
                     println!("{} {name}  would update", p.warn("~"));
@@ -128,6 +131,10 @@ fn apply(report: &Report, jobs: usize, p: &Painter) -> usize {
                 Some(Err(e)) => Err(e),
                 None => Err(anyhow!("internal error: no clone result")),
             }
+        } else if let RepoState::Error(msg) = &r.state {
+            // Couldn't inspect it, so don't guess what to change: report it as
+            // a failure and carry on with the other repos.
+            Err(anyhow!("can't inspect repo: {msg}"))
         } else {
             Ok(drifts_of(&r.state))
         }
@@ -163,11 +170,11 @@ fn apply(report: &Report, jobs: usize, p: &Painter) -> usize {
     failed
 }
 
-/// The drift list inside a state (empty for `Ok` / `Missing`).
+/// The drift list inside a state (empty for `Ok` / `Missing` / `Error`).
 fn drifts_of(state: &RepoState) -> Vec<Drift> {
     match state {
         RepoState::Drifted(d) => d.clone(),
-        RepoState::Ok | RepoState::Missing => Vec::new(),
+        RepoState::Ok | RepoState::Missing | RepoState::Error(_) => Vec::new(),
     }
 }
 

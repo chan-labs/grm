@@ -49,7 +49,7 @@ fn render(report: &Report, p: &Painter) -> String {
     use std::fmt::Write as _;
     let mut out = String::new();
 
-    let (mut ok, mut missing, mut drifted) = (0, 0, 0);
+    let (mut ok, mut missing, mut drifted, mut errors) = (0, 0, 0, 0);
     for r in &report.repos {
         let name = &r.repo.spec.name;
         let path = r.repo.path.display();
@@ -67,6 +67,17 @@ fn render(report: &Report, p: &Painter) -> String {
                     p.err("missing"),
                     p.dim(&path)
                 );
+            }
+            RepoState::Error(msg) => {
+                errors += 1;
+                let _ = writeln!(
+                    out,
+                    "{} {name} {}  {}",
+                    p.err("✗"),
+                    p.err("error"),
+                    p.dim(&path)
+                );
+                let _ = writeln!(out, "    {msg}");
             }
             RepoState::Drifted(drifts) => {
                 // Only informational drift → the repo still counts as ok.
@@ -97,11 +108,16 @@ fn render(report: &Report, p: &Painter) -> String {
         }
     }
 
-    let _ = writeln!(
+    let _ = write!(
         out,
         "\n{ok} ok, {missing} missing, {drifted} drifted, {} extra",
         report.extras.len()
     );
+    // Only mention errors when there are some, to keep the usual line short.
+    if errors > 0 {
+        let _ = write!(out, ", {errors} error(s)");
+    }
+    out.push('\n');
     out
 }
 

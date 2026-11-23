@@ -514,3 +514,30 @@ fn init_creates_file_and_refuses_overwrite_without_force() {
     // The new manifest is usable: an empty manifest with an empty root is in sync.
     fx.grm_with_file(&manifest).arg("status").assert().code(0);
 }
+
+#[test]
+fn broken_repo_does_not_stop_status_or_sync() {
+    let fx = two_repo_fixture();
+    // `alpha` exists with a `.git` file pointing nowhere, so every git
+    // command in it fails. `beta` is missing and should still be cloned.
+    let alpha = fx.repo_path("alpha");
+    fs::create_dir_all(&alpha).unwrap();
+    fs::write(alpha.join(".git"), "gitdir: /nonexistent/grm-test\n").unwrap();
+
+    fx.grm()
+        .arg("status")
+        .assert()
+        .code(1)
+        .stdout(predicate::str::contains("alpha").and(predicate::str::contains("error")))
+        .stdout(predicate::str::contains("beta"));
+
+    fx.grm()
+        .arg("sync")
+        .assert()
+        .code(1)
+        .stdout(predicate::str::contains("alpha").and(predicate::str::contains("failed")));
+    assert!(
+        fx.repo_path("beta").join(".git").exists(),
+        "beta must still be cloned when alpha is broken"
+    );
+}

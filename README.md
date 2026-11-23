@@ -318,7 +318,10 @@ Make the disk match the manifest:
 - Uncommitted changes and ahead/behind commits are only reported. grm never
   commits, pulls, pushes or resets.
 
-A repo that fails is reported and the others still run.
+A repo that fails is reported and the others still run. That includes a
+checkout grm can't even inspect (for example a corrupt `.git`): it's reported
+as failed and left untouched, and the remaining repos are still cloned and
+fixed.
 
 | Flag | Meaning |
 | --- | --- |
@@ -344,6 +347,9 @@ doesn't fetch. For each repo it reports one of:
 - **ok** (`✓`): matches the manifest.
 - **drifted** (`~`): wrong identity config or a wrong `origin`, which
   `grm sync` would fix.
+- **error** (`✗`): there's a checkout, but git commands in it fail (corrupt
+  repo, permission problem). The git error is shown under it. Other repos are
+  still checked.
 
 Uncommitted changes and ahead/behind counts are listed under the repo as
 well, dimmed, but they are informational only: a repo whose only differences
@@ -352,7 +358,7 @@ are these still counts as ok.
 It also lists **extras**: git repos under `root` (up to 3 levels deep) that
 aren't in the manifest.
 
-**Exit code:** 1 if any repo is missing or drifted (config or `origin`), or if
+**Exit code:** 1 if any repo is missing, drifted (config or `origin`) or in error, or if
 there are extras; otherwise 0. Uncommitted changes and ahead/behind on their
 own don't change the exit code. This makes it useful in scripts and CI:
 

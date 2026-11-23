@@ -210,14 +210,14 @@ deletes its extras.
 - Methods that answer questions about the data: `is_informational`,
   `needs_sync`, `has_drift` ([state.rs:46](src/state.rs#L46)).
 - Passing a method as a closure: `.any(RepoReport::needs_sync)`
-  ([state.rs:105](src/state.rs#L105)).
+  ([state.rs:109](src/state.rs#L109)).
 - Moving values out of a `Vec` with `for x in vec`
-  ([state.rs:121](src/state.rs#L121)).
+  ([state.rs:125](src/state.rs#L125)).
 - Collecting an iterator of `Result`s into one `Result`
-  ([state.rs:135](src/state.rs#L135)).
-- `Option::is_some_and` ([state.rs:167](src/state.rs#L167)).
+  ([state.rs:143](src/state.rs#L143)).
+- `Option::is_some_and` ([state.rs:175](src/state.rs#L175)).
 - `Path::starts_with` compares path components
-  ([state.rs:212](src/state.rs#L212)).
+  ([state.rs:220](src/state.rs#L220)).
 
 ### [`src/commands/*.rs`](src/commands): the subcommands
 
@@ -234,8 +234,8 @@ this order:
    trait to get its methods ([status.rs:16](src/commands/status.rs#L16)),
    returning `ExitCode::from(1)` ([status.rs:26](src/commands/status.rs#L26)),
    `writeln!` into a `String` ([status.rs:45](src/commands/status.rs#L45)),
-   `pub(crate)` ([status.rs:110](src/commands/status.rs#L110)),
-   `impl Display` arguments ([status.rs:159](src/commands/status.rs#L159)).
+   `pub(crate)` ([status.rs:126](src/commands/status.rs#L126)),
+   `impl Display` arguments ([status.rs:175](src/commands/status.rs#L175)).
    Note how `render` returns a `String` instead of printing, so it can be
    tested.
 3. [`add.rs`](src/commands/add.rs): ownership in signatures
@@ -261,13 +261,13 @@ this order:
    is separate from doing, which makes `--dry-run` easy.
 7. [`sync.rs`](src/commands/sync.rs): the most advanced. `&=`
    ([sync.rs:51](src/commands/sync.rs#L51)), `filter`/`map`
-   ([sync.rs:105](src/commands/sync.rs#L105)), `if` as an expression
-   ([sync.rs:122](src/commands/sync.rs#L122)), `type` aliases
-   ([sync.rs:198](src/commands/sync.rs#L198)), atomics
-   ([sync.rs:206](src/commands/sync.rs#L206)), scoped threads
-   ([sync.rs:209](src/commands/sync.rs#L209)), `move` closures
-   ([sync.rs:215](src/commands/sync.rs#L215)), `let ... else { break }`
-   ([sync.rs:223](src/commands/sync.rs#L223)).
+   ([sync.rs:108](src/commands/sync.rs#L108)), `if` as an expression
+   ([sync.rs:125](src/commands/sync.rs#L125)), `type` aliases
+   ([sync.rs:205](src/commands/sync.rs#L205)), atomics
+   ([sync.rs:213](src/commands/sync.rs#L213)), scoped threads
+   ([sync.rs:216](src/commands/sync.rs#L216)), `move` closures
+   ([sync.rs:222](src/commands/sync.rs#L222)), `let ... else { break }`
+   ([sync.rs:230](src/commands/sync.rs#L230)).
 
 ### [`tests/`](tests): end-to-end tests
 
@@ -288,20 +288,20 @@ repos in a temp directory (no network, no real home directory).
 
 | Concept | Where to see it |
 | --- | --- |
-| Ownership & borrowing (`&`, `&mut`, moves) | [add.rs:67](src/commands/add.rs#L67), [git.rs:275](src/git.rs#L275), [state.rs:121](src/state.rs#L121), [import.rs:82](src/commands/import.rs#L82), [sync.rs:215](src/commands/sync.rs#L215) |
+| Ownership & borrowing (`&`, `&mut`, moves) | [add.rs:67](src/commands/add.rs#L67), [git.rs:275](src/git.rs#L275), [state.rs:125](src/state.rs#L125), [import.rs:82](src/commands/import.rs#L82), [sync.rs:222](src/commands/sync.rs#L222) |
 | `&str` vs `String` | [spec.rs:31](src/spec.rs#L31), [commands/mod.rs:40](src/commands/mod.rs#L40), [spec.rs:99](src/spec.rs#L99) |
 | `Option`, `Result` and `?` | [cli.rs:20](src/cli.rs#L20), [main.rs:46](src/main.rs#L46), [spec.rs:82](src/spec.rs#L82), [git.rs:42](src/git.rs#L42), [init.rs:122](src/commands/init.rs#L122), [manifest.rs:173](src/manifest.rs#L173) |
 | Enums & `match` | [cli.rs:30](src/cli.rs#L30), [main.rs:34](src/main.rs#L34), [state.rs:26](src/state.rs#L26), [git.rs:104](src/git.rs#L104), [manifest.rs:295](src/manifest.rs#L295) |
 | Tuple matching | [add.rs:187](src/commands/add.rs#L187), [git.rs:256](src/git.rs#L256) |
 | Slice patterns, `if let`, `let else`, `matches!` | [spec.rs:104](src/spec.rs#L104), [spec.rs:196](src/spec.rs#L196), [remove.rs:113](src/commands/remove.rs#L113), [commands/mod.rs:54](src/commands/mod.rs#L54) |
-| Structs & `impl` blocks | [manifest.rs:258](src/manifest.rs#L258), [state.rs:73](src/state.rs#L73), [status.rs:141](src/commands/status.rs#L141), [init.rs:86](src/commands/init.rs#L86) (struct update) |
-| Traits & `derive` | [cli.rs:12](src/cli.rs#L12), [manifest.rs:74](src/manifest.rs#L74) (hand-written `impl Default`), [status.rs:16](src/commands/status.rs#L16) (extension trait), [status.rs:159](src/commands/status.rs#L159) (`impl Display`), [manifest.rs:30](src/manifest.rs#L30) (`Context as _`) |
+| Structs & `impl` blocks | [manifest.rs:258](src/manifest.rs#L258), [state.rs:77](src/state.rs#L77), [status.rs:157](src/commands/status.rs#L157), [init.rs:86](src/commands/init.rs#L86) (struct update) |
+| Traits & `derive` | [cli.rs:12](src/cli.rs#L12), [manifest.rs:74](src/manifest.rs#L74) (hand-written `impl Default`), [status.rs:16](src/commands/status.rs#L16) (extension trait), [status.rs:175](src/commands/status.rs#L175) (`impl Display`), [manifest.rs:30](src/manifest.rs#L30) (`Context as _`) |
 | serde attributes | [manifest.rs:46](src/manifest.rs#L46) (`default`), [manifest.rs:63](src/manifest.rs#L63) (`skip_serializing_if`), [manifest.rs:120](src/manifest.rs#L120) (`untagged`), [spec.rs:49](src/spec.rs#L49) (`rename_all`) |
-| Iterators & closures | [spec.rs:264](src/spec.rs#L264), [state.rs:105](src/state.rs#L105), [state.rs:135](src/state.rs#L135), [remove.rs:103](src/commands/remove.rs#L103), [sync.rs:105](src/commands/sync.rs#L105), [import.rs:103](src/commands/import.rs#L103) |
-| Modules & visibility (`mod`, `pub`, `pub(crate)`) | [main.rs:6](src/main.rs#L6), [commands/mod.rs:6](src/commands/mod.rs#L6), [status.rs:110](src/commands/status.rs#L110), [cli.rs:169](src/cli.rs#L169) (`super::*`) |
+| Iterators & closures | [spec.rs:264](src/spec.rs#L264), [state.rs:109](src/state.rs#L109), [state.rs:143](src/state.rs#L143), [remove.rs:103](src/commands/remove.rs#L103), [sync.rs:108](src/commands/sync.rs#L108), [import.rs:103](src/commands/import.rs#L103) |
+| Modules & visibility (`mod`, `pub`, `pub(crate)`) | [main.rs:6](src/main.rs#L6), [commands/mod.rs:6](src/commands/mod.rs#L6), [status.rs:126](src/commands/status.rs#L126), [cli.rs:169](src/cli.rs#L169) (`super::*`) |
 | Lifetimes (`'static`, elision) | [git.rs:328](src/git.rs#L328), [spec.rs:247](src/spec.rs#L247), [remove.rs:138](src/commands/remove.rs#L138) |
 | `std::process::Command` | [git.rs:23](src/git.rs#L23), [git.rs:66](src/git.rs#L66) (`.status()` vs `.output()`), [init.rs:117](src/commands/init.rs#L117) |
-| Scoped threads (`thread::scope`) & atomics | [sync.rs:209](src/commands/sync.rs#L209), [sync.rs:206](src/commands/sync.rs#L206) |
+| Scoped threads (`thread::scope`) & atomics | [sync.rs:216](src/commands/sync.rs#L216), [sync.rs:213](src/commands/sync.rs#L213) |
 | `anyhow` errors & context | [git.rs:14](src/git.rs#L14), [manifest.rs:207](src/manifest.rs#L207), [commands/mod.rs:42](src/commands/mod.rs#L42), [main.rs:51](src/main.rs#L51) |
 | `ExitCode` | [main.rs:22](src/main.rs#L22), [status.rs:26](src/commands/status.rs#L26), [sync.rs:55](src/commands/sync.rs#L55) |
 | Unit vs integration tests | [cli.rs:166](src/cli.rs#L166), [cli.rs:173](src/cli.rs#L173), [tests/cli.rs:10](tests/cli.rs#L10), [tests/common/mod.rs:13](tests/common/mod.rs#L13) |

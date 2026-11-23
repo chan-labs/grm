@@ -61,6 +61,10 @@ pub enum RepoState {
     Ok,
     /// Exists but differs; never an empty Vec.
     Drifted(Vec<Drift>),
+    /// Exists but couldn't be inspected (corrupt repo, permission error, …).
+    /// Holds the error message. Kept per-repo so one broken checkout doesn't
+    /// stop `status` / `sync` / `prune` from handling all the others.
+    Error(String),
 }
 
 /// State of a single manifest repo.
@@ -71,11 +75,11 @@ pub struct RepoReport {
 }
 
 impl RepoReport {
-    /// True if this repo needs `sync` to do something: it is `Missing`, or
+    /// True if this repo needs attention: it is `Missing`, `Error`, or
     /// `Drifted` with at least one non-informational drift.
     pub fn needs_sync(&self) -> bool {
         match &self.state {
-            RepoState::Missing => true,
+            RepoState::Missing | RepoState::Error(_) => true,
             RepoState::Ok => false,
             RepoState::Drifted(drifts) => drifts.iter().any(|d| !d.is_informational()),
         }
@@ -122,7 +126,11 @@ pub fn inspect(m: &Manifest) -> Result<Report> {
     // hands us owned `ResolvedRepo`s that we can move into the reports
     // without cloning. (`for x in &vec` would borrow each item instead.)
     for repo in resolved {
-        let state = inspect_repo(&repo)?;
+        // A failure inspecting one repo becomes that repo's state instead of
+        // aborting the whole report.
+        // RUST: `unwrap_or_else` turns an `Err` into a fallback value computed
+        // by the closure; `{e:#}` formats an anyhow error with its context chain.
+        let state = inspect_repo(&repo).unwrap_or_else(|e| RepoState::Error(format!("{e:#}")));
         repos.push(RepoReport { repo, state });
     }
 
@@ -357,6 +365,28 @@ mod tests {
             RepoState::Drifted(vec![Drift::Dirty])
         );
         assert!(!report.has_drift());
+    }
+
+    #[test]
+    fn broken_repo_is_reported_without_aborting_the_rest() {
+        let tmp = TempDir::new().expect("tempdir");
+        let root = tmp.path().join("root");
+        let a = bare_remote(tmp.path(), "a");
+        let b = bare_remote(tmp.path(), "b");
+        let m = manifest(&root, &[&a, &b]);
+        // `a` has a `.git` *file* pointing nowhere: it looks like a repo to
+        // grm, but every git command in it fails.
+        fs::create_dir_all(root.join("a")).expect("mkdir");
+        fs::write(root.join("a/.git"), "gitdir: /nonexistent/grm-test\n").expect("write");
+
+        let report = inspect(&m).expect("inspect must not fail for one bad repo");
+        assert!(
+            matches!(&report.repos[0].state, RepoState::Error(msg) if msg.contains("inspecting")),
+            "{:?}",
+            report.repos[0].state
+        );
+        assert_eq!(report.repos[1].state, RepoState::Missing);
+        assert!(report.has_drift());
     }
 
     #[test]
