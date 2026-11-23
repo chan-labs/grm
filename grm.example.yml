@@ -1,0 +1,67 @@
+# grm.example.yml: an annotated example of every field grm understands.
+#
+# Copy it to ~/.config/grm/grm.yml (or any grm.yml that grm can find; see the
+# README) and edit it. Then run `grm status` to preview and `grm sync` to apply.
+#
+# Note: `grm add`, `grm remove` and `grm import` rewrite this file, which
+# removes all comments. Keep your own notes somewhere else, or edit the file
+# only by hand.
+
+# REQUIRED. The directory repos are cloned under. It must be an absolute path
+# or start with `~` (your home directory). Relative paths are rejected.
+root: ~/src
+
+# OPTIONAL. Settings that apply to every repo unless the repo overrides them.
+defaults:
+  # Host used to expand `owner/name` shorthand. Default: github.com
+  host: github.com
+
+  # How shorthand specs become clone URLs. Default: ssh
+  #   ssh   -> git@{host}:{owner}/{name}.git
+  #   https -> https://{host}/{owner}/{name}.git
+  # URLs you write out in full are used exactly as given.
+  protocol: ssh
+
+  # OPTIONAL. The base git identity, written to each repo's *local* git config
+  # (.git/config). Your global ~/.gitconfig is never changed.
+  identity:
+    name: Jane Doe              # -> user.name
+    email: jane@example.com     # -> user.email
+    # OPTIONAL. Commit and tag signing. If this is set, grm sets
+    # user.signingkey, gpg.format, commit.gpgsign=true and tag.gpgsign=true.
+    signing:
+      # For ssh: the path to the PUBLIC key (`~` is expanded).
+      # For openpgp: the key ID.
+      key: ~/.ssh/id_ed25519.pub
+      # `ssh` (default) or `openpgp`. Becomes gpg.format.
+      format: ssh
+
+# The repos you want on disk. Each entry is either a short string or a mapping.
+repos:
+  # --- Short form: a spec string. The repo is cloned to {root}/{host}/{owner}/{name}.
+  - rust-lang/cargo                    # owner/name on defaults.host -> ~/src/github.com/rust-lang/cargo
+  - gitlab.com/someone/tool            # host/owner/name
+  - git@github.com:serde-rs/serde.git  # scp-style SSH URL
+  - https://github.com/clap-rs/clap    # HTTPS URL (used as given)
+
+  # --- Full form: a mapping. Only `url` is required.
+  - url: git@gitlab.com:work/api.git   # any spec works here, not only full URLs
+    # OPTIONAL. Where to put the checkout. A relative path is resolved against
+    # `root`; an absolute path or one starting with `~` is used as given.
+    # Default: {root}/{host}/{owner}/{name}
+    path: work/api                     # -> ~/src/work/api
+    # OPTIONAL. The branch to check out when the repo is first cloned.
+    branch: main
+    # OPTIONAL. Overrides merged over defaults.identity one field at a time.
+    # Here name and signing come from the defaults and only email changes.
+    identity:
+      email: jane@work.example
+
+  - url: someone-else/dotfiles
+    path: ~/.dotfiles                  # outside root is fine
+    identity:
+      # `signing` replaces the default's signing block as a whole (key and
+      # format are not merged separately), so give both if you need both.
+      signing:
+        key: "0xDEADBEEFCAFEF00D"       # quote key IDs so YAML keeps them as strings
+        format: openpgp
