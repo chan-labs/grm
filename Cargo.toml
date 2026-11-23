@@ -1,0 +1,27 @@
+[package]
+name = "grm"
+version = "0.1.0"
+edition = "2024"
+description = "Manage git repositories declaratively from a grm.yml manifest"
+
+[dependencies]
+anyhow = "1.0.105"
+clap = { version = "4.6.9", features = ["derive", "env"] }
+dirs = "7.0.0"
+owo-colors = "4.4.0"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_yaml_ng = "0.10.0"
+
+[dev-dependencies]
+assert_cmd = "2.2.2"
+predicates = "3.1.4"
+tempfile = "3.27.0"
+
+[profile.release]
+strip = true
+lto = true
+
+# Some deps (dirs, owo-colors, serde_yaml_ng) are only used once the stub
+# modules are implemented; silence cargo's unused-dependency lint until then.
+[lints.cargo]
+unused_dependencies = "allow"
