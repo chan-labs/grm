@@ -170,6 +170,9 @@ mod tests {
     use super::*;
     use clap::CommandFactory;
 
+    // RUST: `#[test]` marks a function as a test for `cargo test`; it passes
+    // unless it panics (e.g. a failed `assert!` or `unwrap()`). Unit tests
+    // like this live next to the code and can call private functions.
     #[test]
     fn cli_definition_is_valid() {
         // Catches clap misconfiguration (duplicate flags, etc.) at test time.

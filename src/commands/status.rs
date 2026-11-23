@@ -107,6 +107,10 @@ fn render(report: &Report, p: &Painter) -> String {
 
 /// One human-readable line for a drift, e.g. `user.email: a → b`.
 /// Shared with `sync` for its dry-run plan.
+// RUST: `pub(crate)` makes an item visible anywhere in this crate (so `sync`
+// and `prune` can use it) but not part of a public API. Plain `pub` is
+// "visible to whoever can see this module"; no keyword means private to
+// this module (and its child modules, such as `tests`).
 pub(crate) fn describe_drift(d: &Drift) -> String {
     match d {
         Drift::Config {

@@ -22,17 +22,17 @@
 //! `/abs/path/name(.git)`. They get host `local`, owner = parent directory
 //! name, name = last path component, and `url` is kept exactly as given.
 
-// RUST: `#![...]` (with `!`) is an "inner attribute" applying to this whole
-// file. Nothing outside tests calls this module yet (the commands are still
-// stubs), so silence "never used" warnings until they do.
-// TODO: remove once the commands use `parse` / `normalize_url`.
-
 use anyhow::{Result, bail};
 use serde::{Deserialize, Serialize};
 
 use crate::manifest::Defaults;
 
 /// A fully parsed repository reference.
+// RUST: the fields are `String` (an owned, heap-allocated string) rather than
+// `&str` (a borrowed view into some other string), so a `RepoSpec` owns its
+// data and can outlive the input text it was parsed from. Functions *take*
+// `&str` (e.g. `parse(input: &str, ..)`) because they only need to read it;
+// `&String` converts to `&str` automatically.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct RepoSpec {
     /// e.g. `github.com`

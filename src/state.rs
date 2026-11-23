@@ -103,7 +103,8 @@ impl Report {
     /// mid-edit.
     pub fn has_drift(&self) -> bool {
         // RUST: iterator adapters like `.any(...)` take a closure (`|r| ...`),
-        // an inline anonymous function.
+        // an inline anonymous function. A named function or method works too:
+        // `RepoReport::needs_sync` is short for `|r| r.needs_sync()`.
         !self.extras.is_empty() || self.repos.iter().any(RepoReport::needs_sync)
     }
 }
@@ -117,8 +118,9 @@ pub fn inspect(m: &Manifest) -> Result<Report> {
     let resolved = m.resolve().context("resolving manifest repos")?;
 
     let mut repos = Vec::with_capacity(resolved.len());
-    // RUST: `into_iter()` consumes the Vec, handing us owned `ResolvedRepo`s
-    // that we can move into the reports without cloning.
+    // RUST: `for x in vec` calls `vec.into_iter()`, which consumes the Vec and
+    // hands us owned `ResolvedRepo`s that we can move into the reports
+    // without cloning. (`for x in &vec` would borrow each item instead.)
     for repo in resolved {
         let state = inspect_repo(&repo)?;
         repos.push(RepoReport { repo, state });

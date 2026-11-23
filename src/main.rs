@@ -19,6 +19,9 @@ use clap::Parser;
 use crate::cli::{Cli, Command};
 use crate::commands::Context;
 
+// RUST: `main` may return an `ExitCode` instead of `()`. Whatever it returns
+// becomes the process exit status (`ExitCode::SUCCESS` = 0, `from(1)` = 1),
+// which is how `grm status` can "fail" in scripts without printing an error.
 fn main() -> ExitCode {
     // RUST: `Cli::parse()` comes from the `Parser` derive. On bad input it
     // prints usage and exits the process itself.

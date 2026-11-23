@@ -6,11 +6,6 @@
 //! documented (e.g. `config_get` on a missing key returns `Ok(None)`).
 //! Config reads/writes always use `--local`, so global config is never touched.
 
-// The command modules that call these are still stubs, so the compiler sees
-// them as unused. Remove this once the commands are implemented.
-// RUST: `#![...]` is an attribute applying to the whole module; `allow`
-// silences a specific lint (warning).
-
 use std::fs;
 use std::io::ErrorKind;
 use std::path::{Path, PathBuf};

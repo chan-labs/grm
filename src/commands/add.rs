@@ -64,6 +64,11 @@ pub fn run(args: AddArgs, ctx: &Context) -> Result<ExitCode> {
 
 /// Validate `args` against `manifest`, append the new entry and return it
 /// resolved (absolute path, merged identity).
+// RUST: ownership in function signatures. `run(args: AddArgs, ..)` above
+// takes `args` by value (it now owns it). Here `&mut Manifest` is a mutable
+// borrow (we may change the manifest but the caller still owns it) and
+// `&AddArgs` a shared, read-only borrow. The compiler allows either one
+// `&mut` or any number of `&` borrows at a time, never both.
 fn add_entry(manifest: &mut Manifest, args: &AddArgs) -> Result<ResolvedRepo> {
     let spec = spec::parse(&args.spec, &manifest.defaults)?;
     let existing = manifest.resolve()?;
