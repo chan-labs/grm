@@ -27,7 +27,6 @@
 // file. The commands that call this module are still stubs, so silence
 // "never used" warnings until they're implemented.
 // TODO: remove once the commands use this module.
-#![allow(dead_code)]
 
 use std::collections::HashMap;
 use std::fs;

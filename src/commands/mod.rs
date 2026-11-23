@@ -21,9 +21,6 @@ use anyhow::{Context as _, Result};
 pub struct Context {
     /// Manifest path from `-f/--file` or `GRM_FILE`. `None` means "discover it"
     /// with `manifest::discover`.
-    // RUST: `#[allow(dead_code)]` silences the "never read" warning until the
-    // stub commands use this. TODO: remove once commands are implemented.
-    #[allow(dead_code)]
     pub manifest_path: Option<PathBuf>,
 }
 
@@ -31,8 +28,6 @@ pub struct Context {
 ///
 /// Returns `true` only for `y` / `yes` (case-insensitive). Anything else,
 /// including an empty line or end-of-input, is `false`.
-// TODO: remove the allow once `remove` / `prune` / `sync` call this.
-#[allow(dead_code)]
 pub fn confirm(prompt: &str) -> Result<bool> {
     // RUST: `print!` (no newline) does not flush stdout automatically, so we
     // flush ourselves to make sure the prompt is visible before we wait.
@@ -52,7 +47,6 @@ pub fn confirm(prompt: &str) -> Result<bool> {
 }
 
 /// Pure part of [`confirm`], split out so it can be unit-tested.
-#[allow(dead_code)]
 fn is_yes(answer: &str) -> bool {
     // RUST: `matches!` is a macro that returns true if the value fits a pattern.
     matches!(answer.trim().to_ascii_lowercase().as_str(), "y" | "yes")

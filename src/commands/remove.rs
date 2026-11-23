@@ -136,24 +136,12 @@ fn entry_text(entry: &RepoEntry) -> &str {
 
 /// Reasons it would be unsafe to delete `path` (empty = safe).
 fn unsafe_to_delete(path: &Path) -> Result<Vec<&'static str>> {
-    // RUST: `&'static str` is a string literal baked into the program, so it
-    // can be returned without worrying about who owns it.
     if !path.join(".git").exists() {
         return Ok(vec![
             "no .git (not a git checkout, so its contents can't be checked)",
         ]);
     }
-    let mut problems = Vec::new();
-    if git::is_dirty(path)? {
-        problems.push("uncommitted changes or untracked files");
-    }
-    if git::has_stash(path)? {
-        problems.push("stashed changes");
-    }
-    if git::has_unpushed(path)? {
-        problems.push("unpushed commits");
-    }
-    Ok(problems)
+    git::unsaved_work(path)
 }
 
 #[cfg(test)]

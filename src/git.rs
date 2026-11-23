@@ -10,7 +10,6 @@
 // them as unused. Remove this once the commands are implemented.
 // RUST: `#![...]` is an attribute applying to the whole module; `allow`
 // silences a specific lint (warning).
-#![allow(dead_code)]
 
 use std::fs;
 use std::io::ErrorKind;
@@ -325,6 +324,26 @@ fn walk(dir: &Path, depth: usize, max_depth: usize, repos: &mut Vec<PathBuf>) ->
         walk(&entry.path(), depth + 1, max_depth, repos)?;
     }
     Ok(())
+}
+
+/// Reasons it would lose work to delete the checkout at `repo`: uncommitted
+/// changes, stashes, or unpushed commits. An empty list means it's safe.
+///
+/// Shared by `prune` and `remove --delete` so both apply the same safety rules.
+// RUST: `&'static str` is a string literal baked into the binary, so it can be
+// returned without anyone having to own it.
+pub fn unsaved_work(repo: &Path) -> Result<Vec<&'static str>> {
+    let mut reasons = Vec::new();
+    if is_dirty(repo)? {
+        reasons.push("uncommitted changes");
+    }
+    if has_stash(repo)? {
+        reasons.push("stashes");
+    }
+    if has_unpushed(repo)? {
+        reasons.push("unpushed commits");
+    }
+    Ok(reasons)
 }
 
 #[cfg(test)]

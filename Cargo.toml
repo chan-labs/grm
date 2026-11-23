@@ -20,8 +20,3 @@ tempfile = "3.27.0"
 [profile.release]
 strip = true
 lto = true
-
-# Some deps (dirs, owo-colors, serde_yaml_ng) are only used once the stub
-# modules are implemented; silence cargo's unused-dependency lint until then.
-[lints.cargo]
-unused_dependencies = "allow"

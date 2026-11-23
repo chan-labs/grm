@@ -119,22 +119,7 @@ fn unsafe_reason(path: &Path, force: bool) -> Option<String> {
     if force {
         return None;
     }
-    // RUST: a closure returning `Result` lets us use `?` for the three checks
-    // and handle any error in one place below.
-    let check = || -> Result<Vec<&str>> {
-        let mut reasons = Vec::new();
-        if git::is_dirty(path)? {
-            reasons.push("uncommitted changes");
-        }
-        if git::has_stash(path)? {
-            reasons.push("stashes");
-        }
-        if git::has_unpushed(path)? {
-            reasons.push("unpushed commits");
-        }
-        Ok(reasons)
-    };
-    match check() {
+    match git::unsaved_work(path) {
         Ok(reasons) if reasons.is_empty() => None,
         Ok(reasons) => Some(format!("has {}", reasons.join(", "))),
         Err(e) => Some(format!("could not check for unsaved work ({e:#})")),

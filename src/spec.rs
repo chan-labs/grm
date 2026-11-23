@@ -26,7 +26,6 @@
 // file. Nothing outside tests calls this module yet (the commands are still
 // stubs), so silence "never used" warnings until they do.
 // TODO: remove once the commands use `parse` / `normalize_url`.
-#![allow(dead_code)]
 
 use anyhow::{Result, bail};
 use serde::{Deserialize, Serialize};
