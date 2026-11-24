@@ -24,7 +24,7 @@ use anyhow::{Context as _, Result};
 use crate::cli::ImportArgs;
 use crate::commands::Context;
 use crate::git;
-use crate::manifest::{self, Identity, Manifest, RepoEntry};
+use crate::manifest::{self, Identity, Manifest, RepoEdit, RepoEntry};
 use crate::spec;
 
 /// What an import scan found.
@@ -81,6 +81,7 @@ pub fn run(args: ImportArgs, ctx: &Context) -> Result<ExitCode> {
 
     // RUST: `.into_iter()` consumes the vector, giving owned items, so the
     // entries can be moved into the manifest without cloning.
+    let before = manifest.repos.len();
     manifest
         .repos
         .extend(plan.added.into_iter().map(|(_, entry)| entry));
@@ -88,7 +89,13 @@ pub fn run(args: ImportArgs, ctx: &Context) -> Result<ExitCode> {
     manifest
         .resolve()
         .context("the imported entries would make the manifest invalid")?;
-    manifest::save(&manifest, &manifest_path)?;
+    // RUST: `[before..]` is a slice of just the entries added above; it
+    // borrows from `manifest.repos` without copying.
+    manifest::save_edit(
+        &manifest,
+        &manifest_path,
+        RepoEdit::Append(&manifest.repos[before..]),
+    )?;
     println!("Imported {count} repo(s) into {}", manifest_path.display());
     Ok(ExitCode::SUCCESS)
 }

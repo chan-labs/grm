@@ -19,7 +19,7 @@ use anyhow::{Context as _, Result, bail};
 use crate::cli::RemoveArgs;
 use crate::commands::{self, Context};
 use crate::git;
-use crate::manifest::{self, Manifest, RepoEntry};
+use crate::manifest::{self, Manifest, RepoEdit, RepoEntry};
 use crate::spec;
 
 /// Run `grm remove`. Returns `ExitCode::SUCCESS` unless documented otherwise.
@@ -60,7 +60,7 @@ pub fn run(args: RemoveArgs, ctx: &Context) -> Result<ExitCode> {
     };
 
     let removed = manifest.repos.remove(index);
-    manifest::save(&manifest, &manifest_path)?;
+    manifest::save_edit(&manifest, &manifest_path, RepoEdit::Remove(index))?;
     println!(
         "Removed {} from {}",
         entry_text(&removed),

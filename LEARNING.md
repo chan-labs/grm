@@ -137,23 +137,28 @@ reading and writing it (`load`, `save`), and `Manifest::resolve`, which turns
 each entry into a `ResolvedRepo` with an absolute path and a merged identity.
 Most commands start with `discover` → `load` → `resolve`.
 
-- serde attributes: `default` ([manifest.rs:46](src/manifest.rs#L46)),
-  `skip_serializing_if` ([manifest.rs:63](src/manifest.rs#L63)),
-  `untagged` enums ([manifest.rs:120](src/manifest.rs#L120)).
+- serde attributes: `default` ([manifest.rs:52](src/manifest.rs#L52)),
+  `skip_serializing_if` ([manifest.rs:69](src/manifest.rs#L69)),
+  `untagged` enums ([manifest.rs:126](src/manifest.rs#L126)).
 - Implementing a trait by hand: `impl Default for Defaults`
-  ([manifest.rs:74](src/manifest.rs#L74)).
+  ([manifest.rs:80](src/manifest.rs#L80)).
 - `.ok()` to turn a `Result` into an `Option`
-  ([manifest.rs:173](src/manifest.rs#L173)).
-- Iterating with `.ancestors()` ([manifest.rs:183](src/manifest.rs#L183)).
-- `with_context(|| ...)` ([manifest.rs:207](src/manifest.rs#L207)).
-- `impl` blocks and `&self` methods ([manifest.rs:258](src/manifest.rs#L258)).
-- `HashMap` ([manifest.rs:289](src/manifest.rs#L289)).
+  ([manifest.rs:179](src/manifest.rs#L179)).
+- Iterating with `.ancestors()` ([manifest.rs:189](src/manifest.rs#L189)).
+- `with_context(|| ...)` ([manifest.rs:213](src/manifest.rs#L213)).
+- `impl` blocks and `&self` methods ([manifest.rs:298](src/manifest.rs#L298)).
+- `HashMap` ([manifest.rs:329](src/manifest.rs#L329)).
 - Destructuring enum variants in a `match`
-  ([manifest.rs:295](src/manifest.rs#L295)).
+  ([manifest.rs:335](src/manifest.rs#L335)).
 - `Option` combinators: `or_else`, `map`, `unwrap_or_default`
-  ([manifest.rs:353](src/manifest.rs#L353)).
+  ([manifest.rs:393](src/manifest.rs#L393)).
 - Tests using `tempfile::tempdir()` for real files on disk (bottom of the
   file).
+- A child module in its own file: `mod edit;` ([manifest.rs:29](src/manifest.rs#L29))
+  loads [manifest/edit.rs](src/manifest/edit.rs), which edits the `repos:`
+  list as text (`split_inclusive`, `Vec::splice`, `drain`) so `add`, `remove`
+  and `import` keep your comments. `save_edit` re-parses the result and falls
+  back to `save` if the edit would change the meaning.
 
 ### [`src/spec.rs`](src/spec.rs): parsing `owner/name` and URLs
 
@@ -239,10 +244,10 @@ this order:
    Note how `render` returns a `String` instead of printing, so it can be
    tested.
 3. [`add.rs`](src/commands/add.rs): ownership in signatures
-   ([add.rs:67](src/commands/add.rs#L67)), `.iter().find(...)`
-   ([add.rs:79](src/commands/add.rs#L79)), `.pop()` + `.context`
-   ([add.rs:135](src/commands/add.rs#L135)), matching a tuple of two
-   `Option`s ([add.rs:187](src/commands/add.rs#L187)).
+   ([add.rs:76](src/commands/add.rs#L76)), `.iter().find(...)`
+   ([add.rs:88](src/commands/add.rs#L88)), `.pop()` + `.context`
+   ([add.rs:144](src/commands/add.rs#L144)), matching a tuple of two
+   `Option`s ([add.rs:196](src/commands/add.rs#L196)).
 4. [`remove.rs`](src/commands/remove.rs): `if let Ok(...)`
    ([remove.rs:88](src/commands/remove.rs#L88)), `.position`
    ([remove.rs:92](src/commands/remove.rs#L92)), an
@@ -255,9 +260,9 @@ this order:
    ([prune.rs:60](src/commands/prune.rs#L60)).
 6. [`import.rs`](src/commands/import.rs): `into_iter` + `extend`
    ([import.rs:82](src/commands/import.rs#L82)), `HashSet`
-   ([import.rs:103](src/commands/import.rs#L103),
-   [import.rs:128](src/commands/import.rs#L128)), `map_or`
-   ([import.rs:170](src/commands/import.rs#L170)). Planning (`plan_import`)
+   ([import.rs:110](src/commands/import.rs#L110),
+   [import.rs:135](src/commands/import.rs#L135)), `map_or`
+   ([import.rs:177](src/commands/import.rs#L177)). Planning (`plan_import`)
    is separate from doing, which makes `--dry-run` easy.
 7. [`sync.rs`](src/commands/sync.rs): the most advanced. `&=`
    ([sync.rs:51](src/commands/sync.rs#L51)), `filter`/`map`
@@ -288,25 +293,25 @@ repos in a temp directory (no network, no real home directory).
 
 | Concept | Where to see it |
 | --- | --- |
-| Ownership & borrowing (`&`, `&mut`, moves) | [add.rs:67](src/commands/add.rs#L67), [git.rs:275](src/git.rs#L275), [state.rs:125](src/state.rs#L125), [import.rs:82](src/commands/import.rs#L82), [sync.rs:222](src/commands/sync.rs#L222) |
+| Ownership & borrowing (`&`, `&mut`, moves) | [add.rs:76](src/commands/add.rs#L76), [git.rs:275](src/git.rs#L275), [state.rs:125](src/state.rs#L125), [import.rs:82](src/commands/import.rs#L82), [sync.rs:222](src/commands/sync.rs#L222) |
 | `&str` vs `String` | [spec.rs:31](src/spec.rs#L31), [commands/mod.rs:40](src/commands/mod.rs#L40), [spec.rs:99](src/spec.rs#L99) |
-| `Option`, `Result` and `?` | [cli.rs:20](src/cli.rs#L20), [main.rs:46](src/main.rs#L46), [spec.rs:82](src/spec.rs#L82), [git.rs:42](src/git.rs#L42), [init.rs:122](src/commands/init.rs#L122), [manifest.rs:173](src/manifest.rs#L173) |
-| Enums & `match` | [cli.rs:30](src/cli.rs#L30), [main.rs:34](src/main.rs#L34), [state.rs:26](src/state.rs#L26), [git.rs:104](src/git.rs#L104), [manifest.rs:295](src/manifest.rs#L295) |
-| Tuple matching | [add.rs:187](src/commands/add.rs#L187), [git.rs:256](src/git.rs#L256) |
+| `Option`, `Result` and `?` | [cli.rs:20](src/cli.rs#L20), [main.rs:46](src/main.rs#L46), [spec.rs:82](src/spec.rs#L82), [git.rs:42](src/git.rs#L42), [init.rs:122](src/commands/init.rs#L122), [manifest.rs:179](src/manifest.rs#L179) |
+| Enums & `match` | [cli.rs:30](src/cli.rs#L30), [main.rs:34](src/main.rs#L34), [state.rs:26](src/state.rs#L26), [git.rs:104](src/git.rs#L104), [manifest.rs:335](src/manifest.rs#L335) |
+| Tuple matching | [add.rs:196](src/commands/add.rs#L196), [git.rs:256](src/git.rs#L256) |
 | Slice patterns, `if let`, `let else`, `matches!` | [spec.rs:104](src/spec.rs#L104), [spec.rs:196](src/spec.rs#L196), [remove.rs:113](src/commands/remove.rs#L113), [commands/mod.rs:54](src/commands/mod.rs#L54) |
-| Structs & `impl` blocks | [manifest.rs:258](src/manifest.rs#L258), [state.rs:77](src/state.rs#L77), [status.rs:157](src/commands/status.rs#L157), [init.rs:86](src/commands/init.rs#L86) (struct update) |
-| Traits & `derive` | [cli.rs:12](src/cli.rs#L12), [manifest.rs:74](src/manifest.rs#L74) (hand-written `impl Default`), [status.rs:16](src/commands/status.rs#L16) (extension trait), [status.rs:175](src/commands/status.rs#L175) (`impl Display`), [manifest.rs:30](src/manifest.rs#L30) (`Context as _`) |
-| serde attributes | [manifest.rs:46](src/manifest.rs#L46) (`default`), [manifest.rs:63](src/manifest.rs#L63) (`skip_serializing_if`), [manifest.rs:120](src/manifest.rs#L120) (`untagged`), [spec.rs:49](src/spec.rs#L49) (`rename_all`) |
-| Iterators & closures | [spec.rs:264](src/spec.rs#L264), [state.rs:109](src/state.rs#L109), [state.rs:143](src/state.rs#L143), [remove.rs:103](src/commands/remove.rs#L103), [sync.rs:108](src/commands/sync.rs#L108), [import.rs:103](src/commands/import.rs#L103) |
+| Structs & `impl` blocks | [manifest.rs:298](src/manifest.rs#L298), [state.rs:77](src/state.rs#L77), [status.rs:157](src/commands/status.rs#L157), [init.rs:86](src/commands/init.rs#L86) (struct update) |
+| Traits & `derive` | [cli.rs:12](src/cli.rs#L12), [manifest.rs:80](src/manifest.rs#L80) (hand-written `impl Default`), [status.rs:16](src/commands/status.rs#L16) (extension trait), [status.rs:175](src/commands/status.rs#L175) (`impl Display`), [manifest.rs:36](src/manifest.rs#L36) (`Context as _`) |
+| serde attributes | [manifest.rs:52](src/manifest.rs#L52) (`default`), [manifest.rs:69](src/manifest.rs#L69) (`skip_serializing_if`), [manifest.rs:126](src/manifest.rs#L126) (`untagged`), [spec.rs:49](src/spec.rs#L49) (`rename_all`) |
+| Iterators & closures | [spec.rs:264](src/spec.rs#L264), [state.rs:109](src/state.rs#L109), [state.rs:143](src/state.rs#L143), [remove.rs:103](src/commands/remove.rs#L103), [sync.rs:108](src/commands/sync.rs#L108), [import.rs:110](src/commands/import.rs#L110) |
 | Modules & visibility (`mod`, `pub`, `pub(crate)`) | [main.rs:6](src/main.rs#L6), [commands/mod.rs:6](src/commands/mod.rs#L6), [status.rs:126](src/commands/status.rs#L126), [cli.rs:169](src/cli.rs#L169) (`super::*`) |
 | Lifetimes (`'static`, elision) | [git.rs:328](src/git.rs#L328), [spec.rs:247](src/spec.rs#L247), [remove.rs:138](src/commands/remove.rs#L138) |
 | `std::process::Command` | [git.rs:23](src/git.rs#L23), [git.rs:66](src/git.rs#L66) (`.status()` vs `.output()`), [init.rs:117](src/commands/init.rs#L117) |
 | Scoped threads (`thread::scope`) & atomics | [sync.rs:216](src/commands/sync.rs#L216), [sync.rs:213](src/commands/sync.rs#L213) |
-| `anyhow` errors & context | [git.rs:14](src/git.rs#L14), [manifest.rs:207](src/manifest.rs#L207), [commands/mod.rs:42](src/commands/mod.rs#L42), [main.rs:51](src/main.rs#L51) |
+| `anyhow` errors & context | [git.rs:14](src/git.rs#L14), [manifest.rs:213](src/manifest.rs#L213), [commands/mod.rs:42](src/commands/mod.rs#L42), [main.rs:51](src/main.rs#L51) |
 | `ExitCode` | [main.rs:22](src/main.rs#L22), [status.rs:26](src/commands/status.rs#L26), [sync.rs:55](src/commands/sync.rs#L55) |
 | Unit vs integration tests | [cli.rs:166](src/cli.rs#L166), [cli.rs:173](src/cli.rs#L173), [tests/cli.rs:10](tests/cli.rs#L10), [tests/common/mod.rs:13](tests/common/mod.rs#L13) |
 | `tempfile` | [tests/common/mod.rs:25](tests/common/mod.rs#L25), [tests/common/mod.rs:45](tests/common/mod.rs#L45), [git.rs:393](src/git.rs#L393) |
-| Collections (`Vec`, `HashMap`, `HashSet`) | [git.rs:268](src/git.rs#L268), [manifest.rs:289](src/manifest.rs#L289), [import.rs:103](src/commands/import.rs#L103) |
+| Collections (`Vec`, `HashMap`, `HashSet`) | [git.rs:268](src/git.rs#L268), [manifest.rs:329](src/manifest.rs#L329), [import.rs:110](src/commands/import.rs#L110) |
 | Macros (`format!`, `bail!`, `matches!`, `writeln!`) | [git.rs:14](src/git.rs#L14), [spec.rs:191](src/spec.rs#L191), [status.rs:45](src/commands/status.rs#L45), [tests/common/mod.rs:224](tests/common/mod.rs#L224) |
 
 ## 4. Exercises
@@ -415,20 +420,24 @@ commands each. With many repos, that's slow.
   and use it in both places? The trait bounds (`Sync`, `Send`) are the
   interesting part.
 
-### 8. Keep comments when editing `grm.yml` (hard)
+### 8. Take the comment with the entry (hard)
 
-`add`, `remove` and `import` load the YAML into structs and write it back,
-which loses comments and formatting. Make them edit the text instead.
+`add`, `remove` and `import` edit the text of `grm.yml` instead of rewriting
+it, so your comments survive
+([manifest/edit.rs](src/manifest/edit.rs)). But `grm remove` leaves behind a
+comment written on the line just above the entry it removes:
 
-- [`src/manifest.rs`](src/manifest.rs): `save` serializes the whole
-  `Manifest`. Instead, add functions that append or remove one entry in the
-  original text, for example by finding the `repos:` block and inserting a
-  line, then re-parsing with `serde_yaml_ng` to check the result is still a
-  valid manifest.
-- Alternatively, look for a YAML crate that preserves formatting and compare
-  the trade-offs.
-- [`src/commands/add.rs`](src/commands/add.rs),
-  [`remove.rs`](src/commands/remove.rs),
-  [`import.rs`](src/commands/import.rs): call the new functions.
-- Test with a manifest full of comments and odd indentation, and update the
-  "Known limitations" section of the README.
+```yaml
+repos:
+  # my fork, until upstream merges the fix   <- left behind
+  - url: gitlab.com/my-fork/clap
+    path: clap-fork
+```
+
+- [`src/manifest/edit.rs`](src/manifest/edit.rs): in `find_block`, record
+  for each item where the comment lines directly above it start (stopping at
+  a blank line), and make `RepoEdit::Remove` drain from there.
+- Think about a section header like `# --- Full form` right above the first
+  entry of a group. Is a blank line a good enough rule for "this comment
+  belongs to the entry"?
+- Tests: add cases next to `remove_middle_item_with_its_nested_lines`.

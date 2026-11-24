@@ -23,6 +23,12 @@
 //!       email: jane@work.example
 //! ```
 
+// RUST: `mod edit;` inside manifest.rs loads `src/manifest/edit.rs` as a
+// child module, `crate::manifest::edit`. `pub use` re-exports `RepoEdit` so
+// callers can write `manifest::RepoEdit` without knowing about the submodule.
+mod edit;
+pub use edit::RepoEdit;
+
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -215,7 +221,40 @@ pub fn load(path: &Path) -> Result<Manifest> {
 /// temp file in the same dir, then rename). Creates parent dirs if needed.
 pub fn save(manifest: &Manifest, path: &Path) -> Result<()> {
     let yaml = serde_yaml_ng::to_string(manifest).context("serializing manifest")?;
+    write_atomic(path, &yaml)
+}
 
+/// Save `manifest`, which is the file at `path` with `edit` applied to its
+/// `repos:` list, by editing the file's text. Comments, blank lines and the
+/// order of keys are kept.
+///
+/// The edited text is parsed again and must give exactly `manifest`. If the
+/// file has a shape the text editor doesn't handle, or the check fails, the
+/// whole file is rewritten with `save` instead (losing its comments) and a
+/// warning is printed.
+pub fn save_edit(manifest: &Manifest, path: &Path, edit: RepoEdit<'_>) -> Result<()> {
+    let original =
+        fs::read_to_string(path).with_context(|| format!("reading manifest {}", path.display()))?;
+    // RUST: `Option::filter` keeps the value only if the closure returns
+    // true, so a text edit that changes the meaning becomes `None`.
+    let edited = edit::apply(&original, edit).filter(|text| {
+        serde_yaml_ng::from_str::<Manifest>(text).is_ok_and(|parsed| parsed == *manifest)
+    });
+    match edited {
+        Some(text) => write_atomic(path, &text),
+        None => {
+            eprintln!(
+                "warning: couldn't edit {} in place, so it was rewritten and its comments were removed",
+                path.display()
+            );
+            save(manifest, path)
+        }
+    }
+}
+
+/// Write `text` to `path` atomically: write a temp file in the same dir, then
+/// rename it over `path`. Creates parent dirs if needed.
+fn write_atomic(path: &Path, text: &str) -> Result<()> {
     // `Path::new("grm.yml").parent()` is `Some("")`, meaning "current dir".
     let dir = match path.parent() {
         Some(d) if !d.as_os_str().is_empty() => d.to_path_buf(),
@@ -231,7 +270,7 @@ pub fn save(manifest: &Manifest, path: &Path) -> Result<()> {
     tmp_name.push(format!(".tmp-{}", std::process::id()));
     let tmp = dir.join(tmp_name);
 
-    fs::write(&tmp, yaml).with_context(|| format!("writing {}", tmp.display()))?;
+    fs::write(&tmp, text).with_context(|| format!("writing {}", tmp.display()))?;
     // Renaming within one directory is atomic: readers see either the old
     // file or the new one, never a half-written file.
     if let Err(err) = fs::rename(&tmp, path) {
@@ -452,6 +491,36 @@ repos:
         assert_eq!(sig.format, SigningFormat::Ssh);
         assert_eq!(m.repos[0], RepoEntry::Short("rust-lang/cargo".into()));
         assert!(matches!(&m.repos[1], RepoEntry::Full { path: Some(p), .. } if p == "work/api"));
+    }
+
+    #[test]
+    fn example_file_parses_and_resolves() {
+        // RUST: `include_str!` reads a file at compile time into a `&str`,
+        // relative to this source file. If grm.example.yml stops matching the
+        // format, this test fails instead of a user's first run.
+        let m = manifest(include_str!("../grm.example.yml"));
+        let repos = m.resolve().unwrap();
+        assert_eq!(repos.len(), m.repos.len());
+        assert!(repos.iter().any(|r| r.path == home().join(".dotfiles")));
+    }
+
+    #[test]
+    fn save_edit_keeps_comments_and_falls_back_when_it_cannot() {
+        let tmp = tempfile::tempdir().unwrap();
+        let path = tmp.path().join("grm.yml");
+        fs::write(&path, "# mine\nroot: /r\nrepos:\n  - a/b  # first\n").unwrap();
+        let mut m = load(&path).unwrap();
+        m.repos.push(RepoEntry::Short("c/d".into()));
+        save_edit(&m, &path, RepoEdit::Append(&m.repos[1..])).unwrap();
+        assert_eq!(
+            fs::read_to_string(&path).unwrap(),
+            "# mine\nroot: /r\nrepos:\n  - a/b  # first\n  - c/d\n"
+        );
+
+        // A flow-style list isn't edited in place, but the save still works.
+        fs::write(&path, "# mine\nroot: /r\nrepos: [a/b]\n").unwrap();
+        save_edit(&m, &path, RepoEdit::Append(&m.repos[1..])).unwrap();
+        assert_eq!(load(&path).unwrap(), m);
     }
 
     #[test]

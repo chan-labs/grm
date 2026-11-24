@@ -18,7 +18,7 @@ use anyhow::{Context as _, Result, bail};
 use crate::cli::AddArgs;
 use crate::commands::Context;
 use crate::git;
-use crate::manifest::{self, Identity, Manifest, RepoEntry, ResolvedRepo};
+use crate::manifest::{self, Identity, Manifest, RepoEdit, RepoEntry, ResolvedRepo};
 use crate::spec;
 
 /// Run `grm add`. Returns `ExitCode::SUCCESS` unless documented otherwise.
@@ -36,7 +36,16 @@ pub fn run(args: AddArgs, ctx: &Context) -> Result<ExitCode> {
         needs_clone(&repo)?
     };
 
-    manifest::save(&manifest, &manifest_path)?;
+    // `add_entry` pushed the new entry last, so that's the one to append.
+    // RUST: `slice::from_ref` turns `&T` into a one-element `&[T]` without
+    // copying. Both borrows of `manifest` here are shared (`&`), so they can
+    // exist at the same time.
+    let added = manifest.repos.last().context("no entry was added")?;
+    manifest::save_edit(
+        &manifest,
+        &manifest_path,
+        RepoEdit::Append(std::slice::from_ref(added)),
+    )?;
     println!("Added {} to {}", args.spec, manifest_path.display());
 
     if args.no_clone {

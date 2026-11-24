@@ -3,9 +3,8 @@
 # Copy it to ~/.config/grm/grm.yml (or any grm.yml that grm can find; see the
 # README) and edit it. Then run `grm status` to preview and `grm sync` to apply.
 #
-# Note: `grm add`, `grm remove` and `grm import` rewrite this file, which
-# removes all comments. Keep your own notes somewhere else, or edit the file
-# only by hand.
+# `grm add`, `grm remove` and `grm import` edit only the `repos:` list, so
+# comments like these are kept.
 
 # REQUIRED. The directory repos are cloned under. It must be an absolute path
 # or start with `~` (your home directory). Relative paths are rejected.

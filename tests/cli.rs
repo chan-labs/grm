@@ -328,6 +328,32 @@ fn add_no_clone_appends_to_manifest() {
 }
 
 #[test]
+fn add_and_remove_keep_comments() {
+    let fx = Fixture::new();
+    let alpha = fx.bare_repo("alpha");
+    let gamma = fx.bare_repo("gamma");
+    fx.write_manifest(&format!(
+        "# my repos\n\nrepos:\n  # the first one\n  - {alpha}   # keep me\n# end of list\n"
+    ));
+    let before = fx.read_manifest();
+
+    fx.grm()
+        .args(["add", &gamma, "--no-clone"])
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("warning").not());
+    let added = fx.read_manifest();
+    assert_eq!(
+        added,
+        before.replace("# keep me\n", &format!("# keep me\n  - {gamma}\n")),
+        "manifest:\n{added}"
+    );
+
+    fx.grm().args(["remove", &gamma]).assert().success();
+    assert_eq!(fx.read_manifest(), before);
+}
+
+#[test]
 fn add_then_sync_clones() {
     let fx = two_repo_fixture();
     let gamma = fx.bare_repo("gamma");

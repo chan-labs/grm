@@ -436,9 +436,11 @@ grm is built so that it can't lose your work by accident:
 
 ## Known limitations
 
-- **Comments in `grm.yml` are lost** when `grm add`, `grm remove` or
-  `grm import` rewrite the file. If you rely on comments, edit the manifest
-  by hand and use only `sync`/`status`/`prune`, which never write to it.
+- `grm add`, `grm remove` and `grm import` edit the `repos:` list in place
+  and keep your comments. A comment on the line above an entry stays behind
+  when that entry is removed. If the list is in a shape grm can't edit safely
+  (for example a one-line `repos: [a/b, c/d]`), grm rewrites the whole file,
+  which removes its comments, and prints a warning.
 - `status` and `sync` don't fetch, so ahead/behind counts are only as current
   as your last `git fetch`.
 - `branch` only takes effect on the first clone. grm doesn't switch branches
